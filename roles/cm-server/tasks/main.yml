@@ -5,12 +5,6 @@
   file: path=~/server_packages  state=directory
 - name: unzip server.tar.gz
   unarchive: src=server.tar.gz dest=~/server_packages/ list_files=yes
-- name: install cloudera-manager-daemons
-  yum: name=/home/centos/server_packages/cloudera-manager-daemons-5.8.0-1.cm580.p0.40.el7.x86_64.rpm
-       state=present
-  become: yes
-  become_method: sudo
-  ignore_errors: yes
 - name: install cloudera-manager-server
   yum: name=/home/centos/server_packages/cloudera-manager-server-5.8.0-1.cm580.p0.40.el7.x86_64.rpm
        state=present

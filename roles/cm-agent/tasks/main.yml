@@ -6,11 +6,6 @@
 - name: gather common packages rpms
   find: paths="/home/centos/agent_packages" patterns="*.rpm"
   register: rpms_paths
-- name: install cloudera-manager-daemons
-  yum: name=/home/centos/agent_packages/cloudera-manager-daemons-5.8.0-1.cm580.p0.40.el7.x86_64.rpm state=present
-  become: yes
-  become_method: sudo
-  ignore_errors: yes
 - name: install cloudera-manager-agent
   yum: name=/home/centos/agent_packages/cloudera-manager-agent-5.8.0-1.cm580.p0.40.el7.x86_64.rpm state=present
   become: yes

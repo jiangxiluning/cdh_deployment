@@ -7,8 +7,8 @@
   tasks:
     - name: restart machine
       command: reboot
-      poll: 0
-      async: 0
+      poll: 5
+      async: 30
       become: yes
       ignore_errors: True
       tags: reboot
