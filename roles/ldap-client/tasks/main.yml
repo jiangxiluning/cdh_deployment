@@ -1,0 +1,48 @@
+---
+- name: disable selinux
+  selinux: state=disabled
+  become: yes
+- name: install packages
+  yum: name={{ item }} state=present
+  become: yes
+  with_items:
+    - openldap-clients
+    - nss-pam-ldapd
+    - autofs
+- name: enable password login
+  lineinfile: dest=/etc/ssh/sshd_config line='PasswordAuthentication yes'
+    regexp='PasswordAuthentication no' state=present
+  become: yes
+- name: config nslcd.conf
+  template: src=nslcd.j2 dest=/etc/nslcd.conf
+  become: yes
+- name: add home mount
+  lineinfile: dest=/etc/auto.master line='/home /etc/auto.nfs' state=present
+  become: yes
+  ignore_errors: yes
+- name: autoconfig
+  command: authconfig --enableforcelegacy --update
+  become: yes
+- name: autoconfig
+  command: authconfig --enableldap --enableldapauth --ldapserver="{{ ldap_server }}"
+    --ldapbasedn="{{ ldap_search_base }}" --update
+  become: yes
+- name: enable nslcd servcie
+  service: state=started enabled=yes name=nslcd
+  become: yes
+- name: copy auto.nfs
+  copy: src=auto.nfs dest=/etc/auto.nfs
+  become: yes
+- name: enable autofs
+  service: state=started enabled=yes name=autofs
+  become: yes
+- name: restart
+  shell: sudo -u root reboot
+  tags: reboot
+  async: 30
+  poll: 5
+  ignore_errors: yes
+- name: waiting for server to come back
+  local_action: wait_for host={{ ansible_ssh_host }} state=started delay=30
+    timeout=300 port=22
+  tags: reboot

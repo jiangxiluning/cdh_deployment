@@ -1,0 +1,5 @@
+---
+ - hosts: cm-server
+   remote_user: centos
+   roles:
+     - cm-server

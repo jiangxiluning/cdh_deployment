@@ -1,0 +1,62 @@
+---
+- name: add key for luning
+  authorized_key: user=centos key="{{ lookup('file', '../files/luning.pub') }}" state=present
+- name: make ~/server_packages directory
+  file: path=~/server_packages  state=directory
+- name: unzip server.tar.gz
+  unarchive: src=server.tar.gz dest=~/server_packages/ list_files=yes
+- name: install cloudera-manager-daemons
+  yum: name=/home/centos/server_packages/cloudera-manager-daemons-5.8.0-1.cm580.p0.40.el7.x86_64.rpm
+       state=present
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
+- name: install cloudera-manager-server
+  yum: name=/home/centos/server_packages/cloudera-manager-server-5.8.0-1.cm580.p0.40.el7.x86_64.rpm
+       state=present
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
+- name: install postgresql
+  yum: name=postgresql-server state=present
+  with_items:
+    - postgresql-server
+    - postgresql-jdbc
+  become: yes
+  tags: server_use_postgresql
+- name: init db
+  command: service postgresql initdb
+  become: yes
+  ignore_errors: yes
+  tags: server_use_postgresql
+- name: enable MD5 authentication for postgresql
+  lineinfile: dest=/var/lib/pgsql/data/pg_hba.conf line="host all all 127.0.0.1/32 md5" state=present
+  become: yes
+  tags: server_use_postgresql
+- name: config postgresql.conf
+  blockinfile:
+    dest: /var/lib/pgsql/data/postgresql.conf
+    state: present
+    block: |
+      shared_buffers = 256MB
+      wal_buffers = 8MB
+      checkpoint_segments = 16
+      checkpoint_completion_target = 0.9
+  become: yes
+  tags: server_use_postgresql
+- name: chkconfig postgresql
+  command: chkconfig postgresql on
+  become: yes
+  tags: server_use_postgresql
+- name: start server
+  service: name=postgresql state=started
+  become: yes
+  tags: server_use_postgresql
+- name: config cm to use postgresql
+  script: populate_db.sh
+  ignore_errors: yes
+  tags: server_use_postgresql
+- name: start server
+  service: name=cloudera-scm-server state=started
+  become: yes
+  tags: server_start

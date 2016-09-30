@@ -1,0 +1,21 @@
+[cm]
+cm-server.novalocal ansible_host=10.0.1.106 
+
+[hadoop-controller]
+hadoop-controller-1.novalocal  ansible_host=10.0.1.107
+hadoop-controller-2.novalocal  ansible_host=10.0.1.108
+hadoop-controller-3.novalocal  ansible_host=10.0.1.109
+
+[hadoop-computation]
+hadoop-computation-1.novalocal ansible_host=10.0.1.110
+hadoop-computation-2.novalocal ansible_host=10.0.1.111
+hadoop-computation-3.novalocal ansible_host=10.0.1.112
+hadoop-computation-4.novalocal ansible_host=10.0.1.113
+
+[hadoop-hosts:children]
+hadoop-controller
+hadoop-computation
+
+[all:children]
+cm
+hadoop-hosts

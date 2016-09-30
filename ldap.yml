@@ -1,0 +1,10 @@
+---
+ - hosts: ldap-clients
+   vars:
+     ldap_server: 10.0.1.114
+     ldap_search_base: ou=Users,dc=goome.com,dc=top
+     ldap_binddn: cn=autobind,dc=top
+     ldap_passwd: a25Q37k60
+   remote_user: centos
+   roles:
+     - ldap-client

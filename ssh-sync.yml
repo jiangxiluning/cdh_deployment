@@ -1,0 +1,21 @@
+---
+- hosts: cm-server
+  remote_user: centos
+  tasks:
+    - name: generate private key
+      user: name=centos generate_ssh_key=yes ssh_key_file=~/.ssh/id_rsa
+    - name: get id_rsa stats
+      stat: path=~/.ssh/id_rsa.pub
+      register: key_stats
+    - name: check id_rsa.pub
+      fail: msg="Public key for CM server not found."
+      when: key_stats.stat.exists == False
+    - name: fetch cm server private key
+      fetch: src=~/.ssh/id_rsa.pub dest=/tmp/fetched/ flat=yes
+- hosts: all
+  remote_user: centos
+  tasks:
+    - name: authorize all the hosts in the cluster
+      authorized_key: user=centos key="{{ lookup('file', '/tmp/fetched/id_rsa.pub') }}" state=present
+    - name: disable ssh know_hosts prompt up
+      copy: src="roles/cm-server/files/ssh_config" dest=~/.ssh/config mode=0400

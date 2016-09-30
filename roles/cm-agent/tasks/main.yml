@@ -1,0 +1,28 @@
+---
+- name: make ~/agent_packages directory
+  file: path=~/agent_packages  state=directory
+- name: unzip agent.tar.gz
+  unarchive: src=agent.tar.gz dest=~/agent_packages/ list_files=yes
+- name: gather common packages rpms
+  find: paths="/home/centos/agent_packages" patterns="*.rpm"
+  register: rpms_paths
+- name: install cloudera-manager-daemons
+  yum: name=/home/centos/agent_packages/cloudera-manager-daemons-5.8.0-1.cm580.p0.40.el7.x86_64.rpm state=present
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
+- name: install cloudera-manager-agent
+  yum: name=/home/centos/agent_packages/cloudera-manager-agent-5.8.0-1.cm580.p0.40.el7.x86_64.rpm state=present
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
+- name: change agent ini file
+  lineinfile: dest=/etc/cloudera-scm-agent/config.ini regexp="server_host"
+              line="server_host={{ server  }}" state=present
+  become: yes
+  become_method: sudo
+  tags: agent_set_cm_server_host
+- name: start agent
+  service: name=cloudera-scm-agent state=started
+  become: yes
+  tags: agent_start

@@ -1,0 +1,82 @@
+---
+- name: set hostname
+  hostname: name={{ inventory_hostname }}
+  become: yes
+  become_user: root
+  become_method: sudo
+  tags: set_nameserver
+- name: set hosts
+  template: src=hosts.j2 dest=/etc/hosts owner=root group=root mode=0644
+  become: yes
+  become_user: root
+  become_method: sudo
+  tags: set_envs
+- name: disable selinux
+  selinux: state=disabled
+  become: yes
+  become_method: sudo
+  tags: set_envs
+- name: disable firewall
+  service: name=iptables state=stopped enabled=no
+  become: yes
+  become_method: sudo
+  tags: set_envs
+- name: copy cloudera-manager.repo
+  copy: src=cloudera-manager.repo dest=/etc/yum.repos.d/  mode='0644'
+  become: yes
+  become_method: sudo
+  tags: set_envs
+- name: copy cloudera-cdh5.repo
+  copy: src=cloudera-cdh5.repo dest=/etc/yum.repos.d/  mode='0644'
+  become: yes
+  become_method: sudo
+  tags: set_envs
+- name: change nameserver
+  lineinfile: dest=/etc/resolv.conf  line="nameserver 8.8.8.8"
+              state=present
+  become: yes
+  become_method: sudo
+  tags: set_envs
+- name: change vm.swappiness
+  sysctl:
+    name: vm.swappiness
+    value: 10
+    state: present
+  become: yes
+  tags: set_envs
+- name: make /opt/cloudera/parcel-repo/ directory
+  file: path=/opt/cloudera/parcel-repo/  state=directory
+  become: yes
+  become_method: sudo
+- name: unzip parcels
+  unarchive: src=parcel.tar.gz dest=/opt/cloudera/parcel-repo/ list_files=yes
+  become: yes
+  become_method: sudo
+- name: make ~/common_packages directory
+  file: path=~/common_packages  state=directory
+- name: unzip common.tar.gz
+  unarchive: src=common.tar.gz dest=~/common_packages/ list_files=yes
+- name: gather common packages rpms
+  find: paths="/home/centos/common_packages" patterns="*.rpm"
+  register: rpms_paths
+- name: install rpms
+  yum: name="{{ item.path }}" state=present
+  with_items: '{{rpms_paths.files}}'
+  become: yes
+  become_method: sudo
+  ignore_errors: yes
+- name: change java_home
+  lineinfile: dest=/etc/profile line="export JAVA_HOME=/usr/java/jdk1.7.0_67-cloudera/"
+              state=present
+  become: yes
+  become_method: sudo
+  tags: config_java
+- name: change LD_LIBRARY_PATH
+  lineinfile: dest=/etc/profile line="export LD_LIBRARY_PATH=$JAVA_HOME/lib" state=present
+  become: yes
+  become_method: sudo
+  tags: config_java
+#- name: upgrade all packages
+#  yum: name=* state=latest
+#  become: yes
+#  ignore_errors: yes

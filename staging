@@ -1,0 +1,29 @@
+[cm-server]
+cm-server.novalocal ansible_host=10.0.1.114
+
+[hadoop-controller]
+hadoop-controller-1.novalocal  ansible_host=10.0.1.107
+
+[hadoop-computation]
+hadoop-computation-1.novalocal ansible_host=10.0.1.110
+hadoop-computation-2.novalocal ansible_host=10.0.1.111
+hadoop-computation-3.novalocal ansible_host=10.0.1.112
+hadoop-computation-4.novalocal ansible_host=10.0.1.113
+
+[hadoop-hosts:children]
+hadoop-controller
+hadoop-computation
+
+[all:children]
+cm-server
+hadoop-hosts
+
+[ldap-server]
+cm-server.novalocal ansible_host=10.0.1.114
+
+[nfs-server]
+cm-server.novalocal ansible_host=10.0.1.114
+
+[ldap-clients]
+10.0.1.124
+10.0.1.125
