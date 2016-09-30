@@ -1,0 +1,4 @@
+roles/cm-server/files/server.tar.gz
+roles/cm-agent/files/agent.tar.gz
+roles/common/files/common.tar.gz
+roles/common/files/parcel.tar.gz
